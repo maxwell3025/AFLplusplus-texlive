@@ -96,3 +96,20 @@ RUN echo "set encoding=utf-8" > /root/.vimrc && \
     echo ". /etc/bash_completion" >> ~/.bashrc && \
     echo 'alias joe="joe --wordwrap --joe_state -nobackup"' >> ~/.bashrc && \
     echo "export PS1='"'[AFL++ \h] \w \$ '"'" >> ~/.bashrc
+
+RUN apt update
+
+RUN apt install -y subversion
+
+COPY ./subversion_config /etc/subversion/config
+RUN svn co svn://tug.org/texlive/tags/texlive-2025.2/Build/source/ /src
+
+WORKDIR /src
+
+RUN apt install -y libfontconfig1-dev
+
+RUN apt install -y libfontconfig1
+
+ENV TL_BUILD_ENV="CC='/usr/local/bin/afl-gcc-fast' CXX='/usr/local/bin/afl-g++-fast'"
+ENV TL_MAKE_FLAGS=-j`nproc`
+RUN ./Build --without-x
