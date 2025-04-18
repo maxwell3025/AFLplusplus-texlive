@@ -24,9 +24,30 @@ RUN ./Build --without-x --prefix=/opt/texlive || true
 
 ENV PATH="${PATH}:/opt/texlive/bin/x86_64-pc-linux-gnu"
 
-
 WORKDIR /src/Work
 RUN make install
 
 WORKDIR /root
 COPY example.tex .
+
+RUN mkdir -p input_raw
+RUN mkdir -p input_unique
+RUN mkdir -p input
+RUN mkdir -p output
+COPY ./PDF2LaTeX-dataset/dataset/*.tex /root/input_raw
+
+RUN afl-system-config
+
+RUN afl-cmin -i input_raw -o input_unique -- /opt/texlive/bin/x86_64-pc-linux-gnu/pdflatex @@
+
+WORKDIR /root/input_unique
+
+RUN apt install -y parallel
+
+RUN parallel afl-tmin -t 5000 -i {} -o ../input/{} -- /opt/texlive/bin/x86_64-pc-linux-gnu/pdflatex @@ ::: \
+    *.tex
+
+WORKDIR /root
+
+COPY ./fuzzer.sh /root/fuzzer.sh
+ENTRYPOINT ["./fuzzer.sh"]

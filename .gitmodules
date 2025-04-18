@@ -1,0 +1,3 @@
+[submodule "PDF2LaTeX-dataset"]
+	path = PDF2LaTeX-dataset
+	url = https://github.com/wzlxjtu/PDF2LaTeX-dataset.git
